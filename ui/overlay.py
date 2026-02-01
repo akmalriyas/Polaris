@@ -13,9 +13,7 @@ class BaseOverlay:
         self.lbl_status = None
 
     def show(self):
-        if self.window is not None:
-            try: self.window.destroy()
-            except: pass
+        self.hide() # Clean up any existing window and references
             
         self.window = ctk.CTkToplevel(self.root)
         self.window.attributes('-topmost', True)
@@ -62,8 +60,13 @@ class BaseOverlay:
     def hide(self):
         self.running = False
         if self.window:
-            self.window.destroy()
+            try: self.window.destroy()
+            except: pass
             self.window = None
+        # Clear references to widgets that were inside the destroyed window
+        self.lbl_timer = None
+        self.lbl_status = None
+        self.lbl_footer = None
 
     def _update(self):
         if not self.running or not self.window: return
@@ -138,6 +141,10 @@ class PlaybackOverlay(BaseOverlay):
         """Update the current loop number (called from main thread)."""
         self.current_loop = current_loop
         self._update_loop_display()
+
+    def hide(self):
+        super().hide()
+        self.lbl_loop = None
 
     def on_update(self):
         elapsed = time.time() - self.start_time

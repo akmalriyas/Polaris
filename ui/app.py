@@ -28,6 +28,7 @@ class App(ctk.CTk):
         self.current_macro_data = {"flow": [], "metadata": {}}
         
         # Keep track of internal listeners/threads
+        self.playback_lock = threading.Lock()
         self.playback_thread = None
         
         # --- Backend Setup ---
@@ -639,67 +640,65 @@ class App(ctk.CTk):
         self.btn_play.configure(state="normal")
 
     def start_playback(self):
-        if not self.current_macro_data["flow"]:
-            messagebox.showwarning("Polaris", "No macro loaded!")
-            return
+        with self.playback_lock:
+            if not self.current_macro_data["flow"]:
+                messagebox.showwarning("Polaris", "No macro loaded!")
+                return
 
-        # Concurrency Check: If already playing, stop and restart
-        if self.player.playing:
-            print("Stopping active playback to restart...")
-            self.player.stop()
-            time.sleep(0.1) 
-        
-        # Get loop settings
-        loop_mode = self.settings.get("loop_mode", "once")
-        loop_count = self.settings.get("loop_count", 3) if loop_mode == "count" else 1
-        if loop_mode == "infinite":
-            loop_count = -1  # -1 means infinite
+            # Concurrency Check: If already playing, stop first
+            if self.player.playing:
+                self.player.stop()
+                time.sleep(0.2) 
             
-        self.status_label.configure(text="Playing...")
-        self.btn_record.configure(state="disabled")
-        self.btn_play.configure(state="disabled")
-        
-        if self.settings.get("show_overlay", True):
-            self.play_overlay.show(len(self.current_macro_data["flow"]), loop_mode, loop_count)
-        
-        self.webhook_manager.on_playback_started("Custom Macro", loop_mode, loop_count)
-        
-        self.playback_thread = threading.Thread(target=self._run_playback_thread, args=(loop_mode, loop_count), daemon=True)
-        self.playback_thread.start()
+            # Reset tracking
+            self._last_loop_count = 0
+            self.player.playing = True
+
+            # Get loop settings
+            loop_mode = self.settings.get("loop_mode", "once")
+            loop_count = self.settings.get("loop_count", 3) if loop_mode == "count" else 1
+            if loop_mode == "infinite":
+                loop_count = -1
+                
+            self.status_label.configure(text="Playing...")
+            self.btn_record.configure(state="disabled")
+            self.btn_play.configure(state="disabled")
+            
+            if self.settings.get("show_overlay", True):
+                self.play_overlay.show(len(self.current_macro_data["flow"]), loop_mode, loop_count)
+            
+            self.webhook_manager.on_playback_started("Custom Macro", loop_mode, loop_count)
+            
+            self.playback_thread = threading.Thread(target=self._run_playback_thread, args=(loop_mode, loop_count), daemon=True)
+            self.playback_thread.start()
 
     def _run_playback_thread(self, loop_mode="once", total_loops=1):
         current_loop = 0
-        
-        while True:
-            if not self.player.playing and current_loop > 0:
-                break  # Stopped externally
+        try:
+            while self.player.playing:
+                current_loop += 1
+                self._last_loop_count = current_loop
                 
-            current_loop += 1
-            self._last_loop_count = current_loop
-            
-            # Update overlay with current loop
-            if self.settings.get("show_overlay", True):
-                self.after(0, lambda l=current_loop: self.play_overlay.update_loop(l))
-            
-            self.player.play(self.current_macro_data)
-            
-            # Check if we should continue
-            if loop_mode == "once":
-                break
-            elif loop_mode == "count" and current_loop >= total_loops:
-                break
-            elif loop_mode == "infinite":
-                # Check if stop was requested
+                # Update overlay with current loop
+                if self.settings.get("show_overlay", True):
+                    self.after(0, lambda l=current_loop: self.play_overlay.update_loop(l))
+                
+                self.player.play(self.current_macro_data)
+                
+                # Check exit conditions
                 if not self.player.playing:
                     break
-                continue
-            else:
-                break
-        
-        self.after(0, self._on_playback_finished)
+                if loop_mode == "once":
+                    break
+                elif loop_mode == "count" and current_loop >= total_loops:
+                    break
+                # Infinite continues automatically
+        finally:
+            self.player.playing = False
+            self.after(0, self._on_playback_finished)
         
     def _on_playback_finished(self):
-        if self.player.playing: return # Still thinking it's playing?
+        # Removed safety check that could hang the UI if state was inconsistent
         self.status_label.configure(text="Playback finished.")
         self.play_overlay.hide()
         self.btn_record.configure(state="normal")

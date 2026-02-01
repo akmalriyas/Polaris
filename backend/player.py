@@ -90,8 +90,8 @@ class Player:
                 if key:
                     self.keyboard_controller.release(key)
                     
-        self.playing = False
-        print("Playback finished.")
+        # Loop finished actions
+        print("Playback sequence iteration finished.")
 
     def stop(self):
         """Forces playback to stop."""

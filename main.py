@@ -8,6 +8,15 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from ui.app import App
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 def show_splash():
     """Show splash screen before main app loads."""
     import customtkinter as ctk
@@ -58,8 +67,8 @@ if __name__ == "__main__":
     app = App()
     
     # Set window icon
-    icon_path_ico = os.path.join(os.path.dirname(__file__), "assets", "icon.ico")
-    icon_path_png = os.path.join(os.path.dirname(__file__), "assets", "icon.png")
+    icon_path_ico = resource_path(os.path.join("assets", "icon.ico"))
+    icon_path_png = resource_path(os.path.join("assets", "icon.png"))
     
     if os.path.exists(icon_path_ico):
         try:
