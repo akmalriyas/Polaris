@@ -68,6 +68,15 @@ Polaris is a high-performance, aesthetically pleasing macro recording and playba
 
 ---
 
+## Installation
+
+You can find the latest release on [GitHub Releases](https://github.com/AkmalRiyas/Polaris/releases).
+1. **Download**: Grab the latest `Polaris.exe` from the releases section.
+2. **Launch**: Run the executable. Polaris is portable—no installation required.
+3. **Security**: Since Polaris uses keyboard/mouse hooks for macro functionality, you may need to allow it through Windows Defender or your antivirus.
+
+---
+
 ## 📝 Usage Tips
 - **Click Through**: The overlays are designed to show status without interfering with your clicks.
 - **Resolution**: Try to play macros on the same resolution they were recorded on for the best results.
