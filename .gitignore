@@ -1,0 +1,14 @@
+# Polaris ignore files
+*.json
+*.polaris
+
+# Python environment
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+.venv/
+env/
+.vscode/
+.idea/
