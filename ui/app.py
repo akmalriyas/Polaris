@@ -865,16 +865,19 @@ class App(ctk.CTk):
             else:
                 text = f"  {i+1:<4} {at}"
 
-            # Render Row
+            # Render Row (Optimized for scrolling performance)
             lbl = ctk.CTkLabel(
                 self.workspace_frame, 
                 text=text, 
                 anchor="w", 
                 fg_color=fg_col, 
-                corner_radius=4,
-                font=ctk.CTkFont(family="Consolas", size=12) # Monospace 12
+                corner_radius=0, # Removed for buttery smooth scrolling
+                font=ctk.CTkFont(family="Consolas", size=12)
             )
-            lbl.pack(fill="x", padx=2, pady=1, ipady=4)
+            lbl.pack(fill="x", padx=2, pady=0.5, ipady=4)
+        
+        # Stabilize layout for the scrollable frame
+        self.workspace_frame.update_idletasks()
 
 if __name__ == "__main__":
     app = App()
