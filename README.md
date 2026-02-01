@@ -75,4 +75,13 @@ Polaris is a high-performance, aesthetically pleasing macro recording and playba
 
 ---
 
+## ⚖️ License
+
+This project is licensed under the **Creative Commons Attribution-NoDerivatives 4.0 International (CC BY-ND 4.0)**.
+
+- **Attribution**: You must give appropriate credit.
+- **No Derivatives**: If you remix, transform, or build upon the material, you may not distribute the modified material without giving credit.
+
+---
+
 *Made with ❤️ by Akmal*
